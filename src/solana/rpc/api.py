@@ -75,7 +75,7 @@ from .core import (
     _ClientCore,
 )
 from .providers import http
-
+import requests
 
 class Client(_ClientCore):  # pylint: disable=too-many-public-methods
     """Client class.
@@ -114,7 +114,8 @@ class Client(_ClientCore):  # pylint: disable=too-many-public-methods
     ):
         """Init API client."""
         super().__init__(commitment, blockhash_cache)
-        self._provider = http.HTTPProvider(endpoint, timeout=timeout, extra_headers=extra_headers)
+        self._provider = http.HTTPProvider(endpoint_uri=endpoint)
+        # self._provider = requests.Session()
 
     def is_connected(self) -> bool:
         """Health check.

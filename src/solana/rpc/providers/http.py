@@ -1,7 +1,8 @@
 """HTTP RPC Provider."""
 from typing import Tuple, Type, overload
-
+from typing import Optional, Dict
 import httpx
+import requests
 from solders.rpc.requests import Body
 from solders.rpc.responses import RPCResult
 
@@ -35,8 +36,27 @@ from .core import (
 )
 
 
+class SessionManager:
+    """Manages a shared requests.Session instance."""
+
+    _shared_session = requests.Session()
+
+    @classmethod
+    def get_session(cls) -> requests.Session:
+        """Get the shared session."""
+        return cls._shared_session
+
 class HTTPProvider(BaseProvider, _HTTPProviderCore):
     """HTTP provider to interact with the http rpc endpoint."""
+    _session = ""
+    def __init__(self, endpoint_uri: str, timeout: float = 10, extra_headers: Optional[Dict[str, str]] = None):
+        """Initialize HTTPProvider with a shared session."""
+        super().__init__(endpoint_uri)
+        self._session = SessionManager.get_session()
+        print("this is our session: ", self._session)
+        self._session.headers.update(extra_headers or {})
+        self._session.timeout = timeout
+        self._session.verify = True
 
     def __str__(self) -> str:
         """String definition for HTTPProvider."""
@@ -51,13 +71,13 @@ class HTTPProvider(BaseProvider, _HTTPProviderCore):
     def make_request_unparsed(self, body: Body) -> str:
         """Make an async HTTP request to an http rpc endpoint."""
         request_kwargs = self._before_request(body=body)
-        raw_response = httpx.post(**request_kwargs)
+        raw_response = self._session.post(**request_kwargs)
         return _after_request_unparsed(raw_response)
 
     def make_batch_request_unparsed(self, reqs: Tuple[Body, ...]) -> str:
         """Make an async HTTP request to an http rpc endpoint."""
         request_kwargs = self._before_batch_request(reqs)
-        raw_response = httpx.post(**request_kwargs)
+        raw_response = self._session.post(**request_kwargs)
         return _after_request_unparsed(raw_response)
 
     @overload

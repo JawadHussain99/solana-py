@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, List, NamedTuple, Optional, Tuple, Type, Union
 
 import solders.system_program as sp
 from solana.rpc.api import Client
-from solana.rpc.async_api import AsyncClient
 from solana.rpc.commitment import Commitment
 from solana.rpc.types import TokenAccountOpts, TxOpts
 from solana.transaction import Transaction
@@ -19,7 +18,6 @@ from spl.token._layouts import ACCOUNT_LAYOUT, MINT_LAYOUT, MULTISIG_LAYOUT  # t
 from spl.token.constants import WRAPPED_SOL_MINT
 
 if TYPE_CHECKING:
-    from spl.token.async_client import AsyncToken
     from spl.token.client import Token
 
 
@@ -103,7 +101,7 @@ class _TokenCore:  # pylint: disable=too-few-public-methods
 
     @staticmethod
     def _create_mint_args(
-        conn: Union[Client, AsyncClient],
+        conn: Client,
         payer: Keypair,
         mint_authority: Pubkey,
         decimals: int,
@@ -111,9 +109,9 @@ class _TokenCore:  # pylint: disable=too-few-public-methods
         freeze_authority: Optional[Pubkey],
         skip_confirmation: bool,
         balance_needed: int,
-        cls: Union[Type[Token], Type[AsyncToken]],
+        cls: Type[Token],
         commitment: Commitment,
-    ) -> Tuple[Union[Token, AsyncToken], Transaction, Keypair, Keypair, TxOpts]:
+    ) -> Tuple[Token, Transaction, Keypair, Keypair, TxOpts]:
         mint_keypair = Keypair()
         token = cls(conn, mint_keypair.pubkey(), program_id, payer)  # type: ignore
         # Construct transaction
